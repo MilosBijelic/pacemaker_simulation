@@ -10,9 +10,18 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot
+import UserInfo
+import subprocess
+
+userinfo = UserInfo.UserInfo("userinfo.txt")
+ui = ''
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+    def __init__(self, MainWindow):
+        super().__init__()
+
+
+        
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(812, 509)
         self.centralWidget = QtWidgets.QWidget(MainWindow)
@@ -61,9 +70,11 @@ class Ui_MainWindow(object):
         self.checkBox = QtWidgets.QCheckBox(self.centralWidget)
         self.checkBox.setGeometry(QtCore.QRect(320, 240, 121, 20))
         self.checkBox.setObjectName("checkBox")
+        
         self.pushButton_2 = QtWidgets.QPushButton(self.centralWidget)
         self.pushButton_2.setGeometry(QtCore.QRect(450, 280, 141, 28))
         self.pushButton_2.setObjectName("pushButton_2")
+
         self.pushButton_3 = QtWidgets.QPushButton(self.centralWidget)
         self.pushButton_3.setGeometry(QtCore.QRect(770, 10, 31, 28))
         self.pushButton_3.setObjectName("pushButton_3")
@@ -75,7 +86,8 @@ class Ui_MainWindow(object):
         self.statusBar.setObjectName("statusBar")
         MainWindow.setStatusBar(self.statusBar)
 
-        self.pushButton_2.clicked.connect(self.on_click)
+        self.pushButton_2.clicked.connect(Ui_MainWindow.register)
+        self.pushButton.clicked.connect(Ui_MainWindow.login)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -93,15 +105,30 @@ class Ui_MainWindow(object):
         self.pushButton_2.setText(_translate("MainWindow", "Register new account"))
         self.pushButton_3.setText(_translate("MainWindow", "X"))
 
-    @QtCore.pyqtSlot()
-    def on_click(self):
-        print("click")
+    def get_text_boxes(self):
+        return self.textEdit.toPlainText(), self.textEdit_2.toPlainText()
+
+    @pyqtSlot()
+    def register():
+        global ui, userinfo
+        user, password = ui.get_text_boxes()
+        print(userinfo.register(user,password))
+
+    @pyqtSlot()
+    def login(self):
+        global ui
+        user, password = ui.get_text_boxes()
+        print(userinfo.login(user,password))
+        if userinfo.login(user,password) == "Login successful.":
+            import pm_inputs
+
+    
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
+    ui = Ui_MainWindow(MainWindow)
+    
     MainWindow.show()
     sys.exit(app.exec_())
