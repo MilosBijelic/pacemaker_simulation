@@ -189,7 +189,20 @@
     </font>
    </property>
    <property name="text">
-    <string>Version 0.1</string>
+    <string>Version 0.2</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_3">
+   <property name="geometry">
+    <rect>
+     <x>760</x>
+     <y>10</y>
+     <width>31</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>X</string>
    </property>
   </widget>
  </widget>
