@@ -61,9 +61,6 @@ class Ui_MainWindow(object):
         self.pushButton_2 = QtWidgets.QPushButton(self.centralWidget)
         self.pushButton_2.setGeometry(QtCore.QRect(450, 280, 141, 28))
         self.pushButton_2.setObjectName("pushButton_2")
-        self.pushButton_3 = QtWidgets.QPushButton(self.centralWidget)
-        self.pushButton_3.setGeometry(QtCore.QRect(770, 10, 31, 28))
-        self.pushButton_3.setObjectName("pushButton_3")
         MainWindow.setCentralWidget(self.centralWidget)
         self.mainToolBar = QtWidgets.QToolBar(MainWindow)
         self.mainToolBar.setObjectName("mainToolBar")
@@ -86,7 +83,6 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "Login"))
         self.checkBox.setText(_translate("MainWindow", "Remember me"))
         self.pushButton_2.setText(_translate("MainWindow", "Register new account"))
-        self.pushButton_3.setText(_translate("MainWindow", "X"))
 
 
 if __name__ == "__main__":

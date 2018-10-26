@@ -71,9 +71,6 @@ class Ui_Dialog(object):
         font.setFamily("Papyrus")
         self.label_6.setFont(font)
         self.label_6.setObjectName("label_6")
-        self.pushButton_3 = QtWidgets.QPushButton(Dialog)
-        self.pushButton_3.setGeometry(QtCore.QRect(760, 10, 31, 28))
-        self.pushButton_3.setObjectName("pushButton_3")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -89,7 +86,6 @@ class Ui_Dialog(object):
         self.pushButton.setText(_translate("Dialog", "Go!"))
         self.pushButton_2.setText(_translate("Dialog", "Update"))
         self.label_6.setText(_translate("Dialog", "Version 0.2"))
-        self.pushButton_3.setText(_translate("Dialog", "X"))
 
 
 if __name__ == "__main__":
