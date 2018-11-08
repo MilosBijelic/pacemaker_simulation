@@ -50,16 +50,12 @@ class UserInfo:
             
             if user in self.userinfo.keys():
                 return "This username has already been used."
-            elif len(self.userinfo.keys()) >= 10:
-                return "The maximum number of users have been registered."
 
             self.userinfo[user] = {  'password' :        password,
                                      'pulse_width' :     0,
                                      'pulse_amplitude':  0,
                                      'heart_rate':       0,
                                      'chamber_to_pace':  0  }
-
-            self.save_file() # write to .txt file
 
             return "User created."
 
@@ -95,6 +91,26 @@ class UserInfo:
                 return "This user does not exist."
 
             return self.userinfo[user]['pulse_width'], self.userinfo[user]['pulse_amplitude'], self.userinfo[user]['heart_rate'], self.userinfo[user]['chamber_to_pace']
+
+
+## DEMO
+#userinfo = UserInfo("userinfo.txt")
+#
+#print(userinfo.reset_file())
+#
+#print(userinfo.register("John", "sjfdssof"))
+#print(userinfo.register("Alex", "gfsdaafdsa"))
+#print(userinfo.register("Mark", "dsadas"))
+#print(userinfo.register("John", "fgagfdsfas")) # duplicate
+#
+#print(userinfo.update_user("Alex", .2, .4, 60, "VOO"))
+#
+#print(userinfo.login("Alex", "gfsdaafdsa")) # correct password 
+#print(userinfo.login("Alex", "fmndjshnfsda")) # wrong password
+#print(userinfo.login("fdahjt", 'ouiyukytrWFQA')) # doesn't exist
+#
+#print(userinfo.get_user_info('Alex'))
+#userinfo.save_file() # write to .txt file
 
 
 

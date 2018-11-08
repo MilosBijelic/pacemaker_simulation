@@ -2,22 +2,35 @@ import sys
 from UserInfo import UserInfo
 from PyQt5.QtWidgets import QWidget, QLineEdit, QStackedWidget, QHBoxLayout, QPushButton, QApplication, QFormLayout, QLabel
 
+# for egram
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
+from pylive import live_plotter
+import numpy as np
+import keyboard
+
 class Ui_MainWindow(QWidget):
 
    def __init__(self):
       super(Ui_MainWindow, self).__init__()
 
       self.userinfo = UserInfo("userinfo.txt")
+
+      self.figure = Figure()
 		
       self.stack1 = QWidget()
       self.stack2 = QWidget()
+      self.stack3 = QWidget()
 		
       self.main_window()
       self.parameter_window()
+      self.egram_window()
 		
       self.Stack = QStackedWidget (self)
       self.Stack.addWidget (self.stack1)
       self.Stack.addWidget (self.stack2)
+      self.Stack.addWidget (self.stack3)
 		
       hbox = QHBoxLayout(self)
       hbox.addWidget(self.Stack)
@@ -74,6 +87,19 @@ class Ui_MainWindow(QWidget):
       
       self.stack2.setLayout(layout)
 
+   def egram_window(self):
+      
+      layout = QFormLayout()
+      layout.setContentsMargins(100, 50, 100, 50)
+
+      # matplotlib Figure()
+      canvas = FigureCanvas(self.figure)
+      toolbar = NavigationToolbar(canvas, self.stack3)
+    
+      layout.addWidget(canvas)
+      
+      self.stack3.setLayout(layout)
+
    # Button functions	
    def login(self):
       user,password = self.t_username.text(), self.t_password.text()
@@ -96,7 +122,7 @@ class Ui_MainWindow(QWidget):
 
    def update(self):
       pass
-		
+   
 def main():
    app = QApplication(sys.argv)
    win = Ui_MainWindow()
