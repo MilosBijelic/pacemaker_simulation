@@ -1,4 +1,3 @@
-
 import numpy as np
 import random as rd
 
@@ -74,7 +73,6 @@ class CustomFigCanvas(FigureCanvas, TimedAnimation):
             self.y2 = np.roll(self.y2, -1)
             self.y2[-1] = self.data2[0]
 
-            
             del(self.data1[0])
             del(self.data2[0])
             

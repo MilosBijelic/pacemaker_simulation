@@ -1,11 +1,17 @@
 import sys
 from UserInfo import UserInfo
 from PyQt5.QtWidgets import QWidget, QLineEdit, QStackedWidget, QHBoxLayout, QPushButton, QApplication, QFormLayout, QLabel
+import PyQt5.QtCore as QtCore
+
+from matplotlib.figure import Figure
 
 # for egram
 from RealTimePlot import CustomFigCanvas
 import threading
 import keyboard
+import numpy as np
+import time
+
 stop = False
 
 class Ui_MainWindow(QWidget):
@@ -26,15 +32,15 @@ class Ui_MainWindow(QWidget):
       self.init_egram_window()
 		
       self.Stack = QStackedWidget (self)
-      self.Stack.addWidget (self.stack1)
-      self.Stack.addWidget (self.stack2)
-      self.Stack.addWidget (self.stack3)
+      self.Stack.addWidget(self.stack1)
+      self.Stack.addWidget(self.stack2)
+      self.Stack.addWidget(self.stack3)
 		
       hbox = QHBoxLayout(self)
       hbox.addWidget(self.Stack)
 
       self.setLayout(hbox)
-      self.setGeometry(300, 50, 500, 300)
+      self.setGeometry(300, 50, 750, 400)
       self.setWindowTitle('Pacemaker DCM')
       self.show()
 
@@ -42,14 +48,14 @@ class Ui_MainWindow(QWidget):
    def init_main_window(self):
       
       layout = QFormLayout()
-      layout.setContentsMargins(100, 50, 100, 50)
+      layout.setContentsMargins(300,150,300,150) # left,top,right,bottom
       
 
       # Textboxes
       self.t_username, self.t_password = QLineEdit("Alexander"), QLineEdit("sWB2PP!d")
       self.t_password.setEchoMode(QLineEdit.Password)
-      layout.addRow("Username:",self.t_username)
-      layout.addRow("Password:",self.t_password)
+      layout.addRow("Username:", self.t_username)
+      layout.addRow("Password:", self.t_password)
 
       # Buttons
       b_login, b_register = QPushButton("Login"), QPushButton("Register")
@@ -68,7 +74,7 @@ class Ui_MainWindow(QWidget):
    def init_parameter_window(self):
       
       layout = QFormLayout()
-      layout.setContentsMargins(100, 50, 100, 50)
+      layout.setContentsMargins(300,150,300,150) # left,top,right,bottom
 
       # Textboxes
       self.t_pulsewidth, self.t_pulseamplitude, self.t_heartrate, self.t_chambertopace = QLineEdit(), QLineEdit(), QLineEdit(), QLineEdit()
@@ -89,7 +95,7 @@ class Ui_MainWindow(QWidget):
    def init_egram_window(self):
       
       layout = QFormLayout()
-      layout.setContentsMargins(0, 0, 0, 0)
+      layout.setContentsMargins(30, 30, 30, 30) # left,top,right,bottom
 
       # matplotlib figure
       self.figure = CustomFigCanvas((0,175), (-5,5), 5,5, 75)
@@ -169,7 +175,8 @@ def dataSendLoop(addData_callback):
 
     # Simulate some data
     n = np.linspace(0, 499, 500)
-    y = (np.sin(n/8.3)) - np.cos(n/12.3) + 2*np.sin(n/5) * np.cos(n/10)
+    y1 = (np.sin(n/8.3)) - np.cos(n/12.3) + 2*np.sin(n/5) * np.cos(n/10)
+    y2 = (np.sin(n/12.3)) - np.cos(n/8.3) + 5/float(3) * np.sin(n/10) * np.cos(n/5)
     i = 0
 
     while(not stop):
@@ -177,7 +184,8 @@ def dataSendLoop(addData_callback):
            i=0
         time.sleep(0.01)
 
-        #source.data_signal.emit(y[i]) 
+        #source.data_signal.emit(y1[i], y2[i]) 
+
         source.data_signal.emit(keyboard.is_pressed('1'),keyboard.is_pressed('2')) 
 
         i += 1
