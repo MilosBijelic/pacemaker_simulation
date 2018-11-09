@@ -57,6 +57,8 @@ class UserInfo:
                                      'heart_rate':       0,
                                      'chamber_to_pace':  0  }
 
+            self.save_file()
+
             return "User created."
 
         # checks if username and password is correct
