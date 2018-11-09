@@ -94,25 +94,3 @@ class UserInfo:
 
             return self.userinfo[user]['pulse_width'], self.userinfo[user]['pulse_amplitude'], self.userinfo[user]['heart_rate'], self.userinfo[user]['chamber_to_pace']
 
-
-## DEMO
-#userinfo = UserInfo("userinfo.txt")
-#
-#print(userinfo.reset_file())
-#
-#print(userinfo.register("John", "sjfdssof"))
-#print(userinfo.register("Alex", "gfsdaafdsa"))
-#print(userinfo.register("Mark", "dsadas"))
-#print(userinfo.register("John", "fgagfdsfas")) # duplicate
-#
-#print(userinfo.update_user("Alex", .2, .4, 60, "VOO"))
-#
-#print(userinfo.login("Alex", "gfsdaafdsa")) # correct password 
-#print(userinfo.login("Alex", "fmndjshnfsda")) # wrong password
-#print(userinfo.login("fdahjt", 'ouiyukytrWFQA')) # doesn't exist
-#
-#print(userinfo.get_user_info('Alex'))
-#userinfo.save_file() # write to .txt file
-
-
-
