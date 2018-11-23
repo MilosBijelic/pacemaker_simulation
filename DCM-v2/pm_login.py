@@ -11,7 +11,6 @@ from matplotlib.figure import Figure
 # for egram
 from RealTimePlot import CustomFigCanvas
 import threading
-import keyboard
 import numpy as np
 import time
 
