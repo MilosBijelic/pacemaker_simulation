@@ -1,7 +1,10 @@
 import sys
 from UserInfo import UserInfo
-from PyQt5.QtWidgets import QWidget, QLineEdit, QStackedWidget, QHBoxLayout, QPushButton, QApplication, QFormLayout, QLabel
+from PyQt5.QtWidgets import QWidget, QLineEdit, QSpinBox, QDoubleSpinBox, QStackedWidget, QHBoxLayout, QGridLayout, QPushButton, QButtonGroup, QRadioButton, QApplication, QFormLayout, QLabel
+from PyQt5.QtGui import QIntValidator
 import PyQt5.QtCore as QtCore
+
+from serial_pm_dcm import pacemaker_serial_comm as serial
 
 from matplotlib.figure import Figure
 
@@ -12,7 +15,9 @@ import keyboard
 import numpy as np
 import time
 
-stop = False
+# used to control multithreading
+stop = False   # set to True kills the thread
+start = False  # set to True when the thread is running
 
 class Ui_MainWindow(QWidget):
 
@@ -51,20 +56,20 @@ class Ui_MainWindow(QWidget):
       layout.setContentsMargins(300,150,300,150) # left,top,right,bottom
       
 
-      # Textboxes
-      self.t_username, self.t_password = QLineEdit("Alexander"), QLineEdit("sWB2PP!d")
+      # - Textboxes
+      self.t_username, self.t_password = QLineEdit("test_user"), QLineEdit("pass")
       self.t_password.setEchoMode(QLineEdit.Password)
       layout.addRow("Username:", self.t_username)
       layout.addRow("Password:", self.t_password)
 
-      # Buttons
+      # - Buttons
       b_login, b_register = QPushButton("Login"), QPushButton("Register")
       layout.addRow(b_login,b_register)
 
       b_login.clicked.connect(self.login)
       b_register.clicked.connect(self.register)
 
-      # Label
+      # - Label
       self.l_message = QLabel("                       ")
       self.l_message.setStyleSheet("font-weight:bold;color:red")
       layout.addRow(self.l_message)
@@ -76,21 +81,179 @@ class Ui_MainWindow(QWidget):
       layout = QFormLayout()
       layout.setContentsMargins(300,150,300,150) # left,top,right,bottom
 
-      # Textboxes
-      self.t_pulsewidth, self.t_pulseamplitude, self.t_heartrate, self.t_chambertopace = QLineEdit(), QLineEdit(), QLineEdit(), QLineEdit()
-      layout.addRow("Pulse Width:",self.t_pulsewidth)
-      layout.addRow("Pulse Amplitude:",self.t_pulseamplitude)
-      layout.addRow("Heart Rate:",self.t_heartrate)
-      layout.addRow("Chamber to Pace:",self.t_chambertopace)
+      # - Parameters
 
-      # Buttons
+      # heart rate
+      self.sb_heartrate = QSpinBox()
+      self.sb_heartrate.setRange(30,175)
+
+      container = Wrapper((self.sb_heartrate,QLabel(("(bpm)"))))
+      layout.addRow("Heart Rate:",container);
+
+      # chamber to pulse
+      rbg_chambertopulse = QButtonGroup()
+      self.rb_ctp_A = QRadioButton("A")
+      rbg_chambertopulse.addButton(self.rb_ctp_A)
+      self.rb_ctp_V = QRadioButton("V")
+      rbg_chambertopulse.addButton(self.rb_ctp_V)
+
+      container = Wrapper((self.rb_ctp_A,self.rb_ctp_V))
+      layout.addRow("Chamber to Pulse: ",container);
+
+      # pulse width
+      self.sb_pulsewidth = QDoubleSpinBox()
+      self.sb_pulsewidth.setRange(0.1,1.9)
+      self.sb_pulsewidth.setDecimals(1)
+      self.sb_pulsewidth.setSingleStep(0.1)
+
+      container = Wrapper((self.sb_pulsewidth,QLabel(("(msec)"))))
+      layout.addRow("Pulse Width:",container);
+      
+      # pulse amplitude
+      self.sb_pulseamplitude = QDoubleSpinBox()
+      self.sb_pulseamplitude.setRange(0.5,7.0)
+      self.sb_pulseamplitude.setDecimals(1)
+      self.sb_pulseamplitude.setSingleStep(0.1)
+      
+      container = Wrapper((self.sb_pulseamplitude,QLabel(("(V)"))))
+      layout.addRow( "Pulse Amplitude:",container);
+
+      # chamber to sense
+      rbg_chambertosense = QButtonGroup()
+      self.rb_cts_A = QRadioButton("A")
+      rbg_chambertosense.addButton(self.rb_cts_A)
+      self.rb_cts_V = QRadioButton("V")
+      rbg_chambertosense.addButton(self.rb_cts_V)
+      self.rb_cts_none = QRadioButton("None")
+      rbg_chambertosense.addButton(self.rb_cts_none)
+
+      container = Wrapper((self.rb_cts_A,self.rb_cts_V,self.rb_cts_none))
+      layout.addRow("Chamber to Sense: ",container);
+      
+      # ventricular sensitivity
+      self.sb_ventricularsensitivity = QDoubleSpinBox()
+      self.sb_ventricularsensitivity.setRange(1,10)
+      self.sb_ventricularsensitivity.setDecimals(1)
+      self.sb_ventricularsensitivity.setSingleStep(0.1)
+
+      container = Wrapper((self.sb_ventricularsensitivity,QLabel(("(mV)"))))
+      layout.addRow("Ventricular Sensitivity: ",container);
+
+      # atrial sensitivity
+      rbg_atrialsensitivity = QButtonGroup()
+      self.rb_as_25= QRadioButton("0.25")
+      rbg_atrialsensitivity.addButton(self.rb_as_25)
+      self.rb_as_50 = QRadioButton("0.50")
+      rbg_atrialsensitivity.addButton(self.rb_as_50)
+      self.rb_as_75 = QRadioButton("0.75")
+      rbg_atrialsensitivity.addButton(self.rb_as_75)
+
+      container = Wrapper((self.rb_as_25,self.rb_as_50,self.rb_as_75,QLabel("(mV)")))
+      layout.addRow("Atrial Sensitivity: ",container);
+
+      # rate adaption
+      rbg_rateadaption = QButtonGroup()
+      self.rb_ra_on= QRadioButton("On")
+      rbg_rateadaption.addButton(self.rb_ra_on)
+      self.rb_ra_off = QRadioButton("Off")
+      rbg_rateadaption.addButton(self.rb_ra_off)
+
+      container = Wrapper((self.rb_ra_on,self.rb_ra_off)) 
+      layout.addRow("Rate Adaption: ",container);
+
+      # Medium Activity Threshold
+      self.sb_mediumactivitythreshold = QSpinBox()
+      self.sb_mediumactivitythreshold.setRange(0,500)
+
+      container = Wrapper((self.sb_mediumactivitythreshold,))
+      layout.addRow("Medium Activity Threshold: ",container)
+
+      # High Activity Threshold
+      self.sb_highactivitythreshold = QSpinBox()
+      self.sb_highactivitythreshold.setRange(0,500)
+
+      container = Wrapper((self.sb_highactivitythreshold,))
+      layout.addRow("High Activity Interval: ",container)
+
+      # Reaction Time
+      self.sb_reactiontime = QSpinBox()
+      self.sb_reactiontime.setRange(10,50)
+
+      container = Wrapper((self.sb_reactiontime,QLabel("(s)")))
+      layout.addRow("Reaction Time: ",container)
+
+      # Recovery Time
+      self.sb_recoverytime = QSpinBox()
+      self.sb_recoverytime.setRange(2,16)
+
+      container = Wrapper((self.sb_recoverytime,QLabel("(min)")))
+      layout.addRow("Recovery Time: ",container)
+
+      # hysterisis
+      rbg_hysteris = QButtonGroup()
+      self.rb_h_on= QRadioButton("On")
+      rbg_hysteris.addButton(self.rb_ra_on)
+      self.rb_h_off = QRadioButton("Off")
+      rbg_hysteris.addButton(self.rb_ra_off)
+
+      container = Wrapper((self.rb_h_on,self.rb_h_off)) 
+      layout.addRow("Hysterisis: ",container);
+
+      # hysterisis interval
+      self.sb_hysterisisinterval = QSpinBox()
+      self.sb_hysterisisinterval.setRange(200,500)
+
+      container = Wrapper((self.sb_hysterisisinterval,QLabel(("(msec)"))))
+      layout.addRow("Hysterisis Interval: ",container);
+
+      # vrp
+      self.sb_vrp = QSpinBox()
+      self.sb_vrp.setRange(150,500)
+
+      container = Wrapper((self.sb_vrp, QLabel("(msec)")));
+      layout.addRow("VRP: ", container)
+
+      # arp
+      self.sb_arp = QSpinBox()
+      self.sb_arp.setRange(150,500)
+
+      container = Wrapper((self.sb_arp, QLabel("(msec)")));
+      layout.addRow("ARP: ", container)
+      
+      # - Set default parameter values
+      self.param_set_default()
+
+      # - Buttons
       b_logout, b_update = QPushButton("Logout"), QPushButton("Update")
       layout.addRow(b_logout,b_update)
 
       b_logout.clicked.connect(self.logout)
       b_update.clicked.connect(self.update)
+
+      self.rb_ctp_A.clicked.connect(self.check_chamber_pulse)
+      self.rb_ctp_V.clicked.connect(self.check_chamber_pulse)
+      self.rb_cts_A.clicked.connect(self.check_chamber_sense)
+      self.rb_cts_V.clicked.connect(self.check_chamber_sense)
       
       self.stack2.setLayout(layout)
+
+   def param_set_default(self):
+      self.sb_heartrate.setValue(60)
+      self.rb_ctp_V.setChecked(True)
+      self.sb_pulsewidth.setValue(0.4)
+      self.sb_pulseamplitude.setValue(3.5)
+      self.rb_cts_none.setChecked(True)
+      self.sb_ventricularsensitivity.setValue(2.5)
+      self.rb_as_75.setChecked(True)
+      self.rb_ra_off.setChecked(True)
+      self.sb_mediumactivitythreshold.setValue(0)
+      self.sb_highactivitythreshold.setValue(0)
+      self.sb_reactiontime.setValue(10)
+      self.sb_recoverytime.setValue(2)
+      self.rb_h_off.setChecked(True)
+      self.sb_hysterisisinterval.setValue(300)
+      self.sb_vrp.setValue(320)
+      self.sb_arp.setValue(250)
 
    def init_egram_window(self):
       
@@ -98,10 +261,10 @@ class Ui_MainWindow(QWidget):
       layout.setContentsMargins(30, 30, 30, 30) # left,top,right,bottom
 
       # matplotlib figure
-      self.figure = CustomFigCanvas((0,175), (-5,5), 5,5, 75)
+      self.figure = CustomFigCanvas((0,175), (-4,4), 5,5, 75)
       layout.addRow(self.figure)
 
-      # Buttons
+      # - Buttons
       back, start = QPushButton("Back"), QPushButton("Start")
       layout.addRow(back, start)
 
@@ -110,7 +273,59 @@ class Ui_MainWindow(QWidget):
       
       self.stack3.setLayout(layout)
 
-# ----  Button Functions	
+# ---- Get Functions
+
+   # Returns a list of parameters if all parameters are within acceptable range
+   # Returns an error message if not
+   def get_parameters(self):
+
+      # Read values
+      heartrate               = int(self.sb_heartrate.value())
+      chambertopulse          = 0 if self.rb_ctp_A.isChecked() else (\
+                                1 if self.rb_ctp_V.isChecked() else 'P')
+      pulsewidth              = int(self.sb_pulsewidth.value() * 10)
+      pulseamplitude          = int(self.sb_pulseamplitude.value() * 10)
+      chambertosense          = 0 if self.rb_cts_A.isChecked() else (\
+                                1 if self.rb_cts_V.isChecked() else (\
+                                2 if self.rb_cts_none.isChecked() else 'S'))
+      ventricularsensitivity  = int(self.sb_ventricularsensitivity.value() * 10)
+      atrialsensitivity       = 25 if self.rb_cts_A.isChecked() else (\
+                                50 if self.rb_cts_V.isChecked() else (\
+                                75 if self.rb_cts_none.isChecked() else ''))
+      rateadaptation          = 1 if self.rb_ra_on.isChecked() else (\
+                                0 if self.rb_ra_off.isChecked() else '')
+      mediumthreshold         = self.sb_mediumactivitythreshold.value()
+      highthreshold           = self.sb_highactivitythreshold.value()
+      reactiontime            = self.sb_reactiontime.value()
+      recoverytime            = self.sb_recoverytime.value()
+      hysterisis              = 1 if self.rb_h_on.isChecked() else (\
+                                0 if self.rb_h_off.isChecked() else 'H')
+      hysterisisinterval      = self.sb_hysterisisinterval.value() // 2
+      vrp                     = self.sb_vrp.value() // 2
+      arp                     = self.sb_arp.value() // 2
+      
+      return [0x16,
+              0x22,
+              0x0,
+              heartrate,               # byte 4
+              chambertopulse,          # byte 5
+              pulsewidth,              # byte 6
+              mediumthreshold,         # byte 7
+              pulseamplitude,          # byte 8
+              highthreshold,           # byte 9
+              chambertosense,          # byte 10
+              ventricularsensitivity,  # byte 11
+              0,                       # byte 12 (free)
+              atrialsensitivity,       # byte 13
+              rateadaptation,          # byte 14 
+              hysterisis,              # byte 15
+              hysterisisinterval,      # byte 16
+              reactiontime,            # byte 17 
+              vrp,                     # byte 18
+              recoverytime,            # byte 19 
+              arp]                     # byte 20 
+   
+# ----  Button Functions
    def login(self):
       user,password = self.t_username.text(), self.t_password.text()
 
@@ -131,7 +346,9 @@ class Ui_MainWindow(QWidget):
          message = "The fields cannot be empty."
       else:
          message = self.userinfo.register(user,password)
-         
+
+      
+      self.param_set_default()   
       self.l_message.setText(message)
 
    def logout(self):
@@ -141,28 +358,61 @@ class Ui_MainWindow(QWidget):
       self.l_message.setText("")
       
    def update(self):
+      par = self.get_parameters()
+      print("Sent:\t", bytearray(par))
+      serial(bytearray(par))
+
+      a = bytearray(par)
+      print( [ i for i in a ] )
+
       self.Stack.setCurrentIndex(2)
    
    def back(self):
-      global stop
-      stop = True
-      self.t1.join()
+      global stop, start
+      
+      if start:
+         stop = True    # kills thread
+         start = False
+         self.t1.join() 
 
-      self.figure.y = self.figure.n * 0.0
-
+         self.figure.y = self.figure.n * 0.0
+         
       self.Stack.setCurrentIndex(1)
 
    def start(self):
-      global stop
+      global stop, start
+      
+      if start:
+         print("Cannot start multiple threads.")
+         return 
+      
       stop = False
-
+      start = True
+      
       self.t1 = threading.Thread(target = dataSendLoop, daemon = True, args = (self.addData_callback,)) # setting daemon to True kills the thread when the main thread exits.
       self.t1.start()
+
+   # ensures that pulse and sense are in the same mode at all times
+   def check_chamber_pulse(self):
+      if self.rb_cts_none.isChecked():
+         return
+      if (self.rb_ctp_A.isChecked()):
+         self.rb_cts_A.setChecked(True)
+      elif (self.rb_ctp_V.isChecked()):
+         self.rb_cts_V.setChecked(True)
+
+   def check_chamber_sense(self):
+      if (self.rb_cts_A.isChecked()):
+         self.rb_ctp_A.setChecked(True)
+      elif (self.rb_cts_V.isChecked()):
+         self.rb_ctp_V.setChecked(True)
+      
+      
+# ---- For egram multithreading
 
    def addData_callback(self, val1, val2):
       self.figure.add_data(val1,val2)
       
-# ---- For egram multithreading
 class Communicate(QtCore.QObject):
     data_signal = QtCore.pyqtSignal((float,float))
 
@@ -174,21 +424,35 @@ def dataSendLoop(addData_callback):
     source.data_signal.connect(addData_callback)
 
     # Simulate some data
-    n = np.linspace(0, 499, 500)
-    y1 = (np.sin(n/8.3)) - np.cos(n/12.3) + 2*np.sin(n/5) * np.cos(n/10)
-    y2 = (np.sin(n/12.3)) - np.cos(n/8.3) + 5/float(3) * np.sin(n/10) * np.cos(n/5)
+    n = np.linspace(0, 4, 500)
+    y1 = np.sin(20*n)
+    y2 = np.sin(50*n)+np.sin(5*n)
     i = 0
-
     while(not stop):
         if i >=499:
            i=0
         time.sleep(0.01)
 
-        #source.data_signal.emit(y1[i], y2[i]) 
-
-        source.data_signal.emit(keyboard.is_pressed('1'),keyboard.is_pressed('2')) 
+        source.data_signal.emit(y1[i], y2[i]) 
+        #source.data_signal.emit(3*keyboard.is_pressed('1'),keyboard.is_pressed('2')) 
 
         i += 1
+
+# ---- PyQt Helpers
+
+# Wraps a list of PyQt5 widgets into a single widget
+def Wrapper(widgets):
+   layout = QGridLayout()
+   layout.setSpacing(5)
+
+   for i in range(0,len(widgets)):
+            layout.addWidget(widgets[i],0,i)
+   
+   re = QWidget()
+   re.setLayout(layout)
+   return re
+
+   
 
 # ---- Main
 def main():
