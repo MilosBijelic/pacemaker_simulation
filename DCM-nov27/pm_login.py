@@ -447,7 +447,7 @@ def dataSendLoop(addData_callback):
 
         source.data_signal.emit(y[i]) 
 
-        i += 1
+        i += 100
 
 # ---- PyQt Helpers
 
